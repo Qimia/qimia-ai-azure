@@ -13,12 +13,30 @@ resource "azurerm_key_vault" "app_secrets" {
     key_permissions = [
       "Get",
       "List",
-      "Create"
+      "Create",
+      "Delete",
+      "Purge",
+      "Recover"
     ]
     secret_permissions = [
       "Get",
       "List",
-      "Set"
+      "Set",
+      "Delete",
+      "Purge",
+      "Recover"
+    ]
+  }
+  access_policy {
+    tenant_id = azurerm_user_assigned_identity.vm.tenant_id
+    object_id = azurerm_user_assigned_identity.vm.principal_id
+    key_permissions = [
+      "Get",
+      "List"
+    ]
+    secret_permissions = [
+      "Get",
+      "List"
     ]
   }
 }
