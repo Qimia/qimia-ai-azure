@@ -14,7 +14,7 @@ resource "azurerm_postgresql_flexible_server" "app" {
   # Cheapest of this price tier.
   # Basic tier isn't an option as it doesn't support private endpoint.
   sku_name   = "GP_Standard_D2ds_v4"
-  version    = "12"
+  version    = "14"
   storage_mb = 1024 * 32
   tags       = {}
   zone       = "1"
@@ -24,6 +24,17 @@ resource "azurerm_postgresql_flexible_server" "app" {
   auto_grow_enabled            = false
   depends_on                   = [azurerm_subnet.db_subnets]
 
+}
+
+resource "azurerm_postgresql_flexible_server_database" "app_db" {
+  name      = "test_db"
+  server_id = azurerm_postgresql_flexible_server.app.id
+}
+
+resource "azurerm_postgresql_flexible_server_configuration" "db_extensions" {
+  name      = "azure.extensions"
+  server_id = azurerm_postgresql_flexible_server.app.id
+  value     = "uuid-ossp"
 }
 
 resource "random_password" "postgres_admin_password" {
@@ -93,15 +104,15 @@ resource "azurerm_network_security_rule" "allow_db_5432" {
   priority                    = 100
   protocol                    = "Tcp"
   resource_group_name         = data.azurerm_resource_group.this.name
-  source_port_range      = "5432"
+  source_port_range           = "5432"
   destination_port_range      = "5432"
-  source_address_prefix = "VirtualNetwork"
-  destination_address_prefix = "VirtualNetwork"
+  source_address_prefix       = "VirtualNetwork"
+  destination_address_prefix  = "VirtualNetwork"
 }
 
 resource "azurerm_subnet_network_security_group_association" "db_subnet_network_rules" {
   network_security_group_id = azurerm_network_security_group.database_subnet.id
-  subnet_id = azurerm_subnet.db_subnets.id
+  subnet_id                 = azurerm_subnet.db_subnets.id
 }
 
 resource "azurerm_private_dns_zone" "pgsql" {

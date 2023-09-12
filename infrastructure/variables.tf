@@ -17,6 +17,7 @@ variable "private_subnets" {
   type        = list(string)
   description = "List of CIDR for the resources to have no public ingress internet access"
 }
+
 variable "db_subnets" {
   type        = list(string)
   description = "List of CIDR for the resources to have only egress."
@@ -26,4 +27,9 @@ variable "machine_sku" {
   type        = string
   description = "The machine type to use"
   default     = "Standard_D4d_v5"
+}
+
+variable "storage_account_name" {
+  type        = string
+  description = "Storage account name for devops purposes"
 }

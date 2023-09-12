@@ -13,7 +13,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   upgrade_mode = "Automatic"
 
   sku       = var.machine_sku
-  instances = 2
+  instances = 1
 
   computer_name_prefix = "qimiaai"
   admin_username       = local.admin_username
@@ -35,7 +35,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     caching              = "ReadWrite"
   }
   identity {
-    type = "UserAssigned"
+    type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.vm.id]
   }
 
@@ -48,11 +48,11 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
       primary   = true
       subnet_id = azurerm_subnet.public_subnets.id
 
-#      load_balancer_backend_address_pool_ids
+      #      load_balancer_backend_address_pool_ids
       load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.vm_ips.id]
-#      public_ip_address { ## TODO experiment only, remove when going to production
-#        name = "temp_public_ip"
-#      }
+      #      public_ip_address { ## TODO experiment only, remove when going to production
+      #        name = "temp_public_ip"
+      #      }
     }
     network_security_group_id = azurerm_network_security_group.vm.id
   }
@@ -83,7 +83,13 @@ resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
         "whoami >> /home/ai_admin/init_user.txt",
         "apt update",
         "apt install -y docker.io docker-compose azure-cli postgresql-client-common postgresql-client-12",
-        "docker run --rm -d -it -p 80:80 yeasy/simple-web:latest"
+        "usermod -aG docker ai_admin",
+        "az login --identity ",
+        "az storage blob download -c ${azurerm_storage_blob.docker_compose_file.storage_container_name} --account-name ${azurerm_storage_blob.docker_compose_file.storage_account_name} -n ${azurerm_storage_blob.docker_compose_file.name} -f docker-compose.yml",
+        "docker-compose down || true",
+        "az acr login -n ${azurerm_container_registry.app.name}",
+        "docker-compose pull",
+        "docker-compose up --detach"
       ]
     )
   })
@@ -126,7 +132,7 @@ resource "azurerm_network_security_rule" "vm_outbound_rule" {
 
 resource "azurerm_subnet_network_security_group_association" "subnet_network_rules" {
   network_security_group_id = azurerm_network_security_group.vm.id
-  subnet_id = azurerm_subnet.public_subnets.id
+  subnet_id                 = azurerm_subnet.public_subnets.id
 }
 
 
@@ -136,8 +142,57 @@ resource "azurerm_user_assigned_identity" "vm" {
   resource_group_name = data.azurerm_resource_group.this.name
 }
 
-resource "azurerm_role_assignment" vm {
-  principal_id = azurerm_user_assigned_identity.vm.principal_id
-  scope = data.azurerm_resource_group.this.id
+resource "azurerm_role_assignment" "vm" {
+  principal_id         = azurerm_user_assigned_identity.vm.principal_id
+  scope                = data.azurerm_resource_group.this.id
   role_definition_name = "Reader"
+}
+
+
+resource "azurerm_storage_container" "devops" {
+  name                 = "devops"
+  storage_account_name = var.storage_account_name
+}
+
+locals {
+  docker_compose_yml = yamlencode({
+    version = "3.0"
+    services = {
+      frontend = {
+        image = "qimiaai27da.azurecr.io/frontend:latest"
+        ports = [
+          "3000:3000"
+        ]
+      }
+      model = {
+        image    = "qimiaai27da.azurecr.io/model:latest"
+        hostname = "model"
+        environment = {
+
+          AZURE_STORAGE_ACCOUNT_NAME = "devopsqimiaaidev"
+          AZURE_CONTAINER_NAME       = "llm-foundation-models"
+          AZURE_FILE_PATH            = "models7b2/ggml-vicuna-7b-q4_0-300523.bin"
+        }
+      }
+      webapi = {
+        "image" = "qimiaai27da.azurecr.io/webapi:latest"
+        "ports" = [
+          "8000:8000"
+        ]
+        environment = {
+          ENV   = var.env
+          CLOUD = "azure"
+        }
+      }
+    }
+  })
+}
+
+
+resource "azurerm_storage_blob" "docker_compose_file" {
+  name                   = "${sha256(local.docker_compose_yml)}-docker-compose.yml"
+  storage_account_name   = var.storage_account_name
+  storage_container_name = azurerm_storage_container.devops.name
+  type                   = "Block"
+  source_content         = local.docker_compose_yml
 }

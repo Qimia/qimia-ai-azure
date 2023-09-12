@@ -39,4 +39,35 @@ resource "azurerm_key_vault" "app_secrets" {
       "List"
     ]
   }
+  access_policy {
+    tenant_id = azurerm_user_assigned_identity.vm.tenant_id
+    object_id = data.azuread_group.developers.object_id
+    key_permissions = [
+      "Get",
+      "List",
+      "Update",
+      "Create",
+      "Import",
+      "Delete",
+      "Recover",
+      "Backup",
+      "Restore",
+      "GetRotationPolicy",
+      "SetRotationPolicy",
+      "Rotate",
+      "Purge"
+    ]
+
+    secret_permissions = [
+      "Get",
+      "List",
+      "Set",
+      "Delete",
+      "Recover",
+      "Backup",
+      "Restore",
+      "Purge"
+    ]
+
+  }
 }

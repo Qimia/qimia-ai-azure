@@ -11,12 +11,12 @@ resource "azurerm_lb" "this" {
 }
 
 resource "azurerm_public_ip" "lb_ip" {
-  name="qimiaAiDev${random_id.resource_suffix.hex}"
-  location = data.azurerm_resource_group.this.location
+  name                = "qimiaAiDev${random_id.resource_suffix.hex}"
+  location            = data.azurerm_resource_group.this.location
   resource_group_name = data.azurerm_resource_group.this.name
-  allocation_method = "Static"
-  sku = "Standard"
-
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  domain_name_label   = "qimia-ai-${random_id.resource_suffix.hex}"
 }
 
 resource "azurerm_lb_rule" "frontend" {
@@ -24,8 +24,17 @@ resource "azurerm_lb_rule" "frontend" {
   name                           = "FrontendHttpForward"
   protocol                       = "Tcp"
   frontend_port                  = 80
-  backend_port                   = 80
-  backend_address_pool_ids = [azurerm_lb_backend_address_pool.vm_ips.id]
+  backend_port                   = 3000
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.vm_ips.id]
+  frontend_ip_configuration_name = "PublicIPAddress"
+}
+resource "azurerm_lb_rule" "webapi" {
+  loadbalancer_id                = azurerm_lb.this.id
+  name                           = "WebApiHttpForward"
+  protocol                       = "Tcp"
+  frontend_port                  = 8000
+  backend_port                   = 8000
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.vm_ips.id]
   frontend_ip_configuration_name = "PublicIPAddress"
 }
 
@@ -35,7 +44,7 @@ resource "azurerm_lb_rule" "ssh_conn" {
   protocol                       = "Tcp"
   frontend_port                  = 22
   backend_port                   = 22
-  backend_address_pool_ids = [azurerm_lb_backend_address_pool.vm_ips.id]
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.vm_ips.id]
   frontend_ip_configuration_name = "PublicIPAddress"
 }
 
