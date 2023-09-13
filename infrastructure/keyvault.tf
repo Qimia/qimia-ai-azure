@@ -4,70 +4,19 @@ resource "azurerm_key_vault" "app_secrets" {
   resource_group_name = data.azurerm_resource_group.this.name
   sku_name            = "standard"
   tenant_id           = data.azurerm_client_config.current.tenant_id
+  enable_rbac_authorization = true
+}
 
-  # TODO temporary. Grants access to whoever is deploying the stack
-  access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
+# Grant developers manual access to secrets
+resource "azurerm_role_assignment" "developers_key_vault_administration" {
+  principal_id = data.azuread_group.developers.object_id
+  scope        = azurerm_key_vault.app_secrets.id
+  role_definition_name = "Key Vault Secrets Officer"
+}
 
-    key_permissions = [
-      "Get",
-      "List",
-      "Create",
-      "Delete",
-      "Purge",
-      "Recover"
-    ]
-    secret_permissions = [
-      "Get",
-      "List",
-      "Set",
-      "Delete",
-      "Purge",
-      "Recover"
-    ]
-  }
-  access_policy {
-    tenant_id = azurerm_user_assigned_identity.vm.tenant_id
-    object_id = azurerm_user_assigned_identity.vm.principal_id
-    key_permissions = [
-      "Get",
-      "List"
-    ]
-    secret_permissions = [
-      "Get",
-      "List"
-    ]
-  }
-  access_policy {
-    tenant_id = azurerm_user_assigned_identity.vm.tenant_id
-    object_id = data.azuread_group.developers.object_id
-    key_permissions = [
-      "Get",
-      "List",
-      "Update",
-      "Create",
-      "Import",
-      "Delete",
-      "Recover",
-      "Backup",
-      "Restore",
-      "GetRotationPolicy",
-      "SetRotationPolicy",
-      "Rotate",
-      "Purge"
-    ]
-
-    secret_permissions = [
-      "Get",
-      "List",
-      "Set",
-      "Delete",
-      "Recover",
-      "Backup",
-      "Restore",
-      "Purge"
-    ]
-
-  }
+# Grant VMs read access to secrets
+resource "azurerm_role_assignment" "vm_keyvault_secrets_reader" {
+  principal_id = azurerm_user_assigned_identity.vm.principal_id
+  scope        = azurerm_key_vault.app_secrets.id
+  role_definition_name = "Key Vault Secrets User"
 }

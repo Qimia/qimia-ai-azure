@@ -19,6 +19,20 @@ resource "azurerm_public_ip" "lb_ip" {
   domain_name_label   = "qimia-ai-${random_id.resource_suffix.hex}"
 }
 
+resource azurerm_key_vault_secret api_host {
+  key_vault_id = azurerm_key_vault.app_secrets.id
+  name = "api-host"
+  content_type = "The DNS of the backend api optionally including the port."
+  value = "${azurerm_public_ip.lb_ip.fqdn}:${local.api_port}"
+}
+
+resource azurerm_key_vault_secret frontend_host {
+  key_vault_id = azurerm_key_vault.app_secrets.id
+  name = "frontend-host"
+  content_type = "The DNS of the backend api optionally including the port."
+  value = "${azurerm_public_ip.lb_ip.fqdn}:80"
+}
+
 resource "azurerm_lb_rule" "frontend" {
   loadbalancer_id                = azurerm_lb.this.id
   name                           = "FrontendHttpForward"
@@ -32,8 +46,8 @@ resource "azurerm_lb_rule" "webapi" {
   loadbalancer_id                = azurerm_lb.this.id
   name                           = "WebApiHttpForward"
   protocol                       = "Tcp"
-  frontend_port                  = 8000
-  backend_port                   = 8000
+  frontend_port                  = local.api_port
+  backend_port                   = 8000 # The port exposed from the web API container
   backend_address_pool_ids       = [azurerm_lb_backend_address_pool.vm_ips.id]
   frontend_ip_configuration_name = "PublicIPAddress"
 }

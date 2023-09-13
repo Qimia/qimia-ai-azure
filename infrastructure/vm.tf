@@ -1,5 +1,6 @@
 locals {
   admin_username = "ai_admin"
+  api_port = 8000
 }
 resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   name                = "vmscaleset"
@@ -77,14 +78,15 @@ resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
   type_handler_version         = "2.0"
   settings = jsonencode({
     "commandToExecute" = join(
-      "; ",
+      "; \n",
       [
         "set -e",
         "whoami >> /home/ai_admin/init_user.txt",
-        "apt update",
-        "apt install -y docker.io docker-compose azure-cli postgresql-client-common postgresql-client-12",
+        "apt update && apt install -y docker.io docker-compose postgresql-client-common postgresql-client-12",
+        "curl -sL https://aka.ms/InstallAzureCLIDeb | bash",
         "usermod -aG docker ai_admin",
         "az login --identity ",
+        "echo 'logged in.'",
         "az storage blob download -c ${azurerm_storage_blob.docker_compose_file.storage_container_name} --account-name ${azurerm_storage_blob.docker_compose_file.storage_account_name} -n ${azurerm_storage_blob.docker_compose_file.name} -f docker-compose.yml",
         "docker-compose down || true",
         "az acr login -n ${azurerm_container_registry.app.name}",
@@ -115,6 +117,7 @@ resource "azurerm_network_security_rule" "vm_inbound_rule" {
   resource_group_name         = azurerm_network_security_group.vm.resource_group_name
   depends_on                  = [azurerm_network_security_group.vm]
 }
+
 resource "azurerm_network_security_rule" "vm_outbound_rule" {
   access                      = "Allow"
   direction                   = "Outbound"
@@ -159,13 +162,13 @@ locals {
     version = "3.0"
     services = {
       frontend = {
-        image = "qimiaai27da.azurecr.io/frontend:latest"
+        image = "${azurerm_container_registry.app.login_server}/frontend:latest"
         ports = [
           "3000:3000"
         ]
       }
       model = {
-        image    = "qimiaai27da.azurecr.io/model:latest"
+        image    = "${azurerm_container_registry.app.login_server}/model:latest"
         hostname = "model"
         environment = {
 
@@ -175,9 +178,9 @@ locals {
         }
       }
       webapi = {
-        "image" = "qimiaai27da.azurecr.io/webapi:latest"
+        "image" = "${azurerm_container_registry.app.login_server}/webapi:latest"
         "ports" = [
-          "8000:8000"
+          "${local.api_port}:8000"
         ]
         environment = {
           ENV   = var.env

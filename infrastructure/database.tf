@@ -42,36 +42,6 @@ resource "random_password" "postgres_admin_password" {
   special = false
 }
 
-resource "azurerm_key_vault_secret" "postgres_admin_password" {
-  key_vault_id = azurerm_key_vault.app_secrets.id
-  name         = "postgres-admin"
-  value        = random_password.postgres_admin_password.result
-  depends_on   = [azurerm_postgresql_flexible_server.app, random_password.postgres_admin_password]
-}
-
-
-#resource "azurerm_private_endpoint" "vm_to_db_endpoint" {
-#  name                = "qimia-ai-vm-to-db-${random_id.resource_suffix.hex}"
-#  location            = data.azurerm_resource_group.this.location
-#  resource_group_name = data.azurerm_resource_group.this.name
-#  subnet_id           = azurerm_subnet.private_subnets.id
-#  depends_on = [azurerm_subnet.private_subnets]
-#
-#
-#  private_service_connection {
-#    name                           = "qimia-ai-vm-to-db"
-#    private_connection_resource_id = azurerm_postgresql_flexible_server.app.id
-#    is_manual_connection           = false
-#    subresource_names              = ["postgresqlServer"] # This is a value defined by Azure
-#    # See: https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource
-#  }
-#}
-
-
-output "resid" {
-  value = azurerm_postgresql_flexible_server.app.id
-}
-
 
 resource "azurerm_subnet" "db_subnets" {
   address_prefixes     = var.db_subnets
@@ -129,18 +99,21 @@ resource "azurerm_private_dns_zone_virtual_network_link" "pgsql" {
 
 resource "azurerm_key_vault_secret" "db_url" {
   key_vault_id = azurerm_key_vault.app_secrets.id
-  name         = "postgres-host"
+  name         = "database-host"
+  content_type = "The hostname for the Postgres flexible server ${azurerm_postgresql_flexible_server.app.name}"
   value        = "${azurerm_postgresql_flexible_server.app.name}.postgres.database.azure.com:5432"
 }
 
 resource "azurerm_key_vault_secret" "db_password" {
   key_vault_id = azurerm_key_vault.app_secrets.id
-  name         = "database-master-password"
+  name         = "database-password"
+  content_type = "User password for the Postgres flexible server ${azurerm_postgresql_flexible_server.app.name} user ${azurerm_key_vault_secret.db_username.value}."
   value        = azurerm_postgresql_flexible_server.app.administrator_password
 }
 
 resource "azurerm_key_vault_secret" "db_username" {
   key_vault_id = azurerm_key_vault.app_secrets.id
-  name         = "database-master-username"
+  name         = "database-username"
+  content_type = "Username for the Postgres flexible server ${azurerm_postgresql_flexible_server.app.name}."
   value        = azurerm_postgresql_flexible_server.app.administrator_login
 }
