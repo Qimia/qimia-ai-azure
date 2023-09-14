@@ -1,0 +1,7 @@
+.manual-secrets-config
+qimia-ai
+qimia-ai.pub
+.idea/
+*.tfplan
+infrastructure/.terraform/
+infrastructure/.terraform.lock.hcl

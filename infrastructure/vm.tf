@@ -59,6 +59,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   }
 
   disable_password_authentication = false
+  encryption_at_host_enabled = true
   tags = {
     env = var.env
   }
@@ -88,14 +89,11 @@ resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
         "az login --identity ",
         "echo 'logged in.'",
         "az storage blob download -c ${azurerm_storage_blob.docker_compose_file.storage_container_name} --account-name ${azurerm_storage_blob.docker_compose_file.storage_account_name} -n ${azurerm_storage_blob.docker_compose_file.name} -f docker-compose.yml",
-        "docker-compose down || true",
-        "az acr login -n ${azurerm_container_registry.app.name}",
-        "docker-compose pull",
-        "docker-compose up --detach"
       ]
     )
   })
 }
+
 
 resource "azurerm_network_security_group" "vm" {
   name                = "vm_security_group_${random_id.resource_suffix.hex}"
