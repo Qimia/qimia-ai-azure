@@ -3,7 +3,9 @@ This repo contains the Terraform code to deploy your Qimia AI infrastructure to 
 The configuration requires an Azure subscription and a Resource Group already created.
 The user or service principal to deploy this code needs full access on the Resource Group. 
 Right now only dev environment is supported and consists of several steps:
-1. Generate or reuse an SSH key pair.
+1. Install terraform v1.5.7 from the terraform
+   - Or install `tfenv`, and then run `tfenv use 1.5.7` which will automatically download the version 1.5.7 and will be active for the rest of the terminal session.
+2. Generate or reuse an SSH key pair.
    Put the public and private key pair as  [qimia-ai](qimia-ai) and [qimia-ai.pub](qimia-ai.pub) in the project root.
 1. Make a plan of the changes to the infrastructure:
     ```bash

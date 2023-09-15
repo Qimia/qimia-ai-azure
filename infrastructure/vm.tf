@@ -78,20 +78,9 @@ resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
   type                         = "CustomScript"
   type_handler_version         = "2.0"
   settings = jsonencode({
-    "commandToExecute" = join(
-      "; \n",
-      [
-        "set -e",
-        "whoami >> /home/ai_admin/init_user.txt",
-        "apt update && apt install -y docker.io docker-compose postgresql-client-common postgresql-client-12",
-        "curl -sL https://aka.ms/InstallAzureCLIDeb | bash",
-        "usermod -aG docker ai_admin",
-        "az login --identity ",
-        "echo 'logged in.'",
-        "az storage blob download -c ${azurerm_storage_blob.docker_compose_file.storage_container_name} --account-name ${azurerm_storage_blob.docker_compose_file.storage_account_name} -n ${azurerm_storage_blob.docker_compose_file.name} -f docker-compose.yml",
-      ]
-    )
+    "commandToExecute" = "echo hello;"
   })
+  lifecycle { ignore_changes = [settings] } # The command will be overwritten by the CI pipelins
 }
 
 
@@ -101,30 +90,15 @@ resource "azurerm_network_security_group" "vm" {
   resource_group_name = data.azurerm_resource_group.this.name
 }
 
-resource "azurerm_network_security_rule" "vm_inbound_rule" {
+resource "azurerm_network_security_rule" "inbound_http_80" {
   access                      = "Allow"
   direction                   = "Inbound"
-  name                        = "allow_ssh"
+  name                        = "allow_http_and_optional_ssh"
   network_security_group_name = azurerm_network_security_group.vm.name
-  priority                    = 1000
-  protocol                    = "*"
+  priority                    = 999
+  protocol                    = "Tcp"
   source_port_range           = "*"
-  destination_port_range      = "*"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_network_security_group.vm.resource_group_name
-  depends_on                  = [azurerm_network_security_group.vm]
-}
-
-resource "azurerm_network_security_rule" "vm_outbound_rule" {
-  access                      = "Allow"
-  direction                   = "Outbound"
-  name                        = "allow_ssh_out"
-  network_security_group_name = azurerm_network_security_group.vm.name
-  priority                    = 1000
-  protocol                    = "*"
-  source_port_range           = "*"
-  destination_port_range      = "*"
+  destination_port_ranges     = [3000, 8000, 22]
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_network_security_group.vm.resource_group_name
@@ -191,7 +165,7 @@ locals {
 
 
 resource "azurerm_storage_blob" "docker_compose_file" {
-  name                   = "${sha256(local.docker_compose_yml)}-docker-compose.yml"
+  name                   = "docker-compose.yml"
   storage_account_name   = var.storage_account_name
   storage_container_name = azurerm_storage_container.devops.name
   type                   = "Block"
