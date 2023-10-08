@@ -1,0 +1,102 @@
+image: public.ecr.aws/h7r6l8b8/tfenv-azurecli
+stages:
+  - version
+  - plan
+  - deploy
+
+.dev-tags: &dev-tags
+  tags:
+    - gitlab-org
+
+version:
+  stage: version
+  script:
+    - ls
+    - env
+    - |
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        echo "$CI_COMMIT_TAG-prod" > .version
+      elif [[ $CI_COMMIT_BRANCH == release/* ]] || [[ $CI_COMMIT_BRANCH == hotfix/* ]]; then
+        echo "$CI_COMMIT_SHORT_SHA-preprod" > .version
+      else
+        echo "$CI_COMMIT_SHORT_SHA" > .version
+      fi
+  <<: *dev-tags
+  only:
+    - dev
+    - merge_requests
+    - tags
+    - /^release\/.+$/
+    - /^hotfix\/.+$/
+  artifacts:
+    paths:
+      - .version
+
+.aws_init:
+  id_tokens:
+    AZURE_ID_TOKEN:
+      aud: https://gitlab.com
+  before_script:
+    - cp $VM_PUB_KEY ./qimia-ai.pub
+    - tfenv use 1.5.7
+    - az login --service-principal -u $AZURE_CLIENT_ID -t $AZURE_TENANT_ID --federated-token $AZURE_ID_TOKEN
+    - az account show
+
+variables:
+  ARM_USE_OIDC: "true"
+  ARM_OIDC_TOKEN: $AZURE_ID_TOKEN
+  ARM_TENANT_ID: $AZURE_TENANT_ID
+  ARM_CLIENT_ID: $AZURE_CLIENT_ID
+  ARM_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID
+
+
+.plan:
+  extends: .aws_init
+  stage: plan
+  variables:
+    ENV: $CI_ENVIRONMENT_NAME
+  needs:
+    - version
+  script:
+    -  bash ci_cd/plan.sh $ENV infrastructure
+  artifacts:
+    expire_in: 7 days
+    paths:
+      - ./plan-artifacts/
+
+plan-dev:
+  extends: .plan
+  environment:
+    name: dev
+  <<: *dev-tags
+  only:
+    - dev
+    - merge_requests
+    - tags
+    - /^release\/.+$/
+    - /^hotfix\/.+$/
+
+.deploy:
+  extends: .aws_init
+  stage: deploy
+  when: manual
+  variables:
+    ENV: $CI_ENVIRONMENT_NAME
+  script:
+    - bash ci_cd/deploy.sh $ENV infrastructure
+
+
+deploy-dev:
+  extends: .deploy
+  needs:
+    - version
+    - plan-dev
+  <<: *dev-tags
+  environment:
+    name: dev
+  only:
+    - dev
+    - /^release\/.+$/
+    - /^hotfix\/.+$/
+    - merge_requests
+    - tags

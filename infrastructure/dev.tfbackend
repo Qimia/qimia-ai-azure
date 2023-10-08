@@ -1,2 +1,3 @@
-resource_group_name  = "qimia-ai-dev"
-storage_account_name = "devopsqimiaaidev"
+resource_group_name     = "qimia-ai-dev"
+storage_account_name    = "devopsqimiaaidev"
+container_name          = "tfstate"
