@@ -7,13 +7,6 @@ resource "azurerm_key_vault" "app_secrets" {
   enable_rbac_authorization = true
 }
 
-# Grant developers manual access to secrets
-resource "azurerm_role_assignment" "developers_key_vault_administration" {
-  principal_id = data.azuread_group.developers.object_id
-  scope        = azurerm_key_vault.app_secrets.id
-  role_definition_name = "Key Vault Secrets Officer"
-}
-
 # Grant VMs read access to secrets
 resource "azurerm_role_assignment" "vm_keyvault_secrets_reader" {
   principal_id = azurerm_user_assigned_identity.vm.principal_id

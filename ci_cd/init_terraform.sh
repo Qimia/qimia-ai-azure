@@ -1,6 +1,9 @@
-echo 'This script needs to be run with a single argument that is the environment "dev", "preprod", or "prod".'
+#!/bin/bash
+set -e
+[ "$#" -eq 2 ] || die "This scripts needs to be run with two parameters env and the stack for example 'sh init_terraform.sh dev infrastructure'"
 env="$1"
 stack="$2"
 cd "$stack"
-terraform init -backend-config="$env.tfbackend"
+echo "Initializing Terraform"
+terraform init -backend-config="${env}.tfbackend" -reconfigure
 cd ..

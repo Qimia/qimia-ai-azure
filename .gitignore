@@ -5,3 +5,5 @@ qimia-ai.pub
 *.tfplan
 infrastructure/.terraform/
 infrastructure/.terraform.lock.hcl
+infrastructure/.tfbackend
+fedIdCreds.json

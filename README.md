@@ -1,4 +1,4 @@
-# azure_terraform
+# Azure Terraform
 This repo contains the Terraform code to deploy your Qimia AI infrastructure to Azure.
 The configuration requires an Azure subscription and a Resource Group already created.
 The user or service principal to deploy this code needs full access on the Resource Group. 
@@ -32,4 +32,4 @@ Right now only dev environment is supported and consists of several steps:
    The characters `<>` need to be removed.
    Upload the secrets to Azure with `sh ci_cd/deploy-secrets.sh` 
    The secrets that are skipped inside [.manual-secrets-config](.manual-secrets-config) will **not** be overwritten. 
-   Only `KEY_VAULT_NAME` is mandatory.  
+   Only `KEY_VAULT_NAME` is mandatory.
