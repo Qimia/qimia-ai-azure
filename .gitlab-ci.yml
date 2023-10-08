@@ -70,7 +70,7 @@ plan-dev:
     name: dev
   <<: *dev-tags
   only:
-    - dev
+    - main
     - merge_requests
     - tags
     - /^release\/.+$/
@@ -95,7 +95,7 @@ deploy-dev:
   environment:
     name: dev
   only:
-    - dev
+    - main
     - /^release\/.+$/
     - /^hotfix\/.+$/
     - merge_requests
