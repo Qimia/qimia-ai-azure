@@ -1,6 +1,6 @@
 set -e
 
-pwd
+apt update && apt install -y docker.io docker-compose postgresql-client-common postgresql-client-12 wget curl
 wget -O azcopy.tar.gz https://aka.ms/downloadazcopy-v10-linux
 tar -xvf azcopy.tar.gz
 rm azcopy.tar.gz
@@ -9,7 +9,6 @@ cp ./azcopy_linux_amd64_*/azcopy /usr/bin/
 
 whoami >> /home/ai_admin/init_user.txt
 
-apt update && apt install -y docker.io docker-compose postgresql-client-common postgresql-client-12
 curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 usermod -aG docker ai_admin
 az login --identity

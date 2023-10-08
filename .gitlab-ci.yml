@@ -23,7 +23,7 @@ version:
       fi
   <<: *dev-tags
   only:
-    - dev
+    - master
     - merge_requests
     - tags
     - /^release\/.+$/
