@@ -44,8 +44,8 @@ resource "random_password" "postgres_admin_password" {
 
 
 resource "azurerm_subnet" "db_subnets" {
-  address_prefixes     = var.db_subnets
-  name                 = "database"
+  address_prefixes     = [var.db_subnet]
+  name                 = var.db_subnet_name
   resource_group_name  = azurerm_virtual_network.this.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
   delegation {

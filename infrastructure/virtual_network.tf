@@ -1,8 +1,8 @@
 resource "azurerm_virtual_network" "this" {
-  name                = "qimia-ai"
+  name                = var.vnet_name
   location            = data.azurerm_resource_group.this.location
   resource_group_name = data.azurerm_resource_group.this.name
-  address_space       = ["10.0.0.0/16"]
+  address_space       = [var.vnet_cidr]
 
   tags = {
     environment = var.env
@@ -10,15 +10,15 @@ resource "azurerm_virtual_network" "this" {
 }
 
 resource "azurerm_subnet" "public_subnets" {
-  address_prefixes     = var.public_subnets
-  name                 = "public"
+  address_prefixes     = [var.public_subnet]
+  name                 = var.public_subnet_name
   resource_group_name  = azurerm_virtual_network.this.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
 }
 
 resource "azurerm_subnet" "private_subnets" {
-  address_prefixes     = var.private_subnets
-  name                 = "private"
+  address_prefixes     = [var.private_subnet]
+  name                 = var.private_subnet_name
   resource_group_name  = azurerm_virtual_network.this.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
 }
