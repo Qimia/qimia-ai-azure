@@ -9,10 +9,9 @@ Right now only dev environment is supported and consists of several steps:
    Put the public and private key pair as  [qimia-ai](qimia-ai) and [qimia-ai.pub](qimia-ai.pub) in the project root.
 1. Make a plan of the changes to the infrastructure:
     ```bash
-   sh ci_cd/plan.sh <ENV> infrastructure.
+   sh ci_cd/plan.sh <ENV> infrastructure <RESOURCE_GROUP_NAME> <STORAGE_ACCOUNT_NAME>.
    ```
    This will print a list of changes to be made by Terraform. In place of `<ENV>` you can put any one of the environment names `dev`, `preprod`, `prod`. At the moment only `dev` is tested and works.
-   This parameter will make sure the variables for the pipeline are read from `infrastructure/<ENV>.tfvars` and terraform state backend configuratin is read from `infrastructure/<ENV>.tfbackend`.
    If the resources to be created are fine, you can skip to the next step.
 2. The previous step has created some plan file which is then used by this step to apply the changes.
    Run

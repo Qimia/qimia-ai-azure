@@ -15,10 +15,24 @@ variable "storage_account_name" {
 
 
 ###  VNET configuration
-variable "existing_vnet" {
-  type = bool
-  description = "Whether to create a new Virtual Network, set to false if it already exists."
-  default = false
+variable "create_vnet" {
+  type = number
+  description = "Whether to create a vnet, set to 0 if it already exists."
+  default = 1
+  validation {
+    condition = var.create_vnet == 0 ||  var.create_vnet == 1
+    error_message = "The creat_vnet should be either 0 or 1."
+  }
+}
+
+variable "create_subnet" {
+  type = number
+  description = "Whether to create the subnets, set to 0 if they already exist."
+  default = 1
+  validation {
+    condition = var.create_subnet == 0 || var.create_subnet == 1
+    error_message = "The create_subnet should be either 0 or 1."
+  }
 }
 
 variable "vnet_name" {

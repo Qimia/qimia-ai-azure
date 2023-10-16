@@ -74,7 +74,7 @@ resource "azurerm_network_interface" "frontend-nic" {
 
   ip_configuration {
     name                          = "frontend_config"
-    subnet_id                     = azurerm_subnet.private_subnets.id
+    subnet_id                     = data.azurerm_subnet.private.id
     private_ip_address_allocation = "Dynamic"
   }
 }
