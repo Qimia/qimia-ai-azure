@@ -47,7 +47,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     ip_configuration {
       name      = "internal"
       primary   = true
-      subnet_id = azurerm_subnet.public_subnets.id
+      subnet_id = data.azurerm_subnet.public.id
       load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.vm_ips.id]
     }
     network_security_group_id = azurerm_network_security_group.vm.id
@@ -58,7 +58,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   tags = {
     env = var.env
   }
-  depends_on = [azurerm_subnet.private_subnets, azurerm_network_security_group.vm, azurerm_user_assigned_identity.vm]
+  depends_on = [data.azurerm_subnet.private, azurerm_network_security_group.vm, azurerm_user_assigned_identity.vm]
 }
 
 resource "random_password" "vm_admin_password" {
@@ -156,7 +156,7 @@ resource "azurerm_network_security_rule" "allow_vm_egress" {
 
 resource "azurerm_subnet_network_security_group_association" "subnet_network_rules" {
   network_security_group_id = azurerm_network_security_group.vm.id
-  subnet_id                 = azurerm_subnet.public_subnets.id
+  subnet_id                 = data.azurerm_subnet.public.id
 }
 
 
