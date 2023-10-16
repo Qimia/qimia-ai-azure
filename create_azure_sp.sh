@@ -4,11 +4,12 @@ die () {
     echo >&2 "$@"
     exit 1
 }
-[ "$#" -eq 2 ] || die "2 arguments required (subscription id and resource group name), $# provided"
+[ "$#" -eq 3 ] || die "2 arguments required (subscription id and resource group name, service principal name), $# provided"
 subscription_id=$1
 resource_group_name=$2
+sp_name=$3 # gitlab-qimia-ai-dev
 
-appId=$(az ad app create --display-name gitlab-qimia-ai-dev --query appId -otsv)
+appId=$(az ad app create --display-name $sp_name --query appId -otsv)
 
 objectId=$(az ad app show --id $appId --query id -otsv)
 
