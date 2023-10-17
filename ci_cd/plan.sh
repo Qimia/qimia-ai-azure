@@ -5,20 +5,16 @@ die () {
     exit 1
 }
 
-[ "$#" -eq 4 ] || die "This scripts needs to be run with two parameters env and the stack for example 'sh plan.sh dev infrastructure qimia-ai-dev devopsimiaaidev'"
+[ "$#" -eq 2 ] || die "This scripts needs to be run with two parameters env and the stack for example 'sh plan.sh dev infrastructure qimia-ai-dev devopsimiaaidev'"
 
 env="$1"
 stack="$2"
-resource_group_name="$3"
-storage_account_name="$4"
 
-export TF_VAR_env="$env"
-export TF_VAR_resource_group_name="$resource_group_name"
-export TF_VAR_storage_account_name="$storage_account_name"
-
-bash ci_cd/init_terraform.sh "$env" "$stack" "$resource_group_name" "$storage_account_name"
+bash ci_cd/init_terraform.sh "$env" "$stack"
 mkdir -p plan-artifacts
 cd "$stack"
 echo "Planning"
-terraform plan -out="../plan-artifacts/$env-$stack.tfplan"
+TF_VARIABLES_PATH="${TF_VARIABLES_PATH:-$env.tfvars}"  # If TF_BACKEND_CONFIG_PATH not defined take the $end.tfvars instead.
+echo "TF variables path $TF_VARIABLES_PATH"
+terraform plan  -out="../plan-artifacts/$env-$stack.tfplan" -var-file="$TF_VARIABLES_PATH"
 cd ..

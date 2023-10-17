@@ -8,4 +8,5 @@ infrastructure/.terraform.lock.hcl
 infrastructure/dev.tfbackend
 infrastructure/preprod.tfbackend
 infrastructure/prod.tfbackend
+infrastructure/*.tfvars
 fedIdCreds.json
