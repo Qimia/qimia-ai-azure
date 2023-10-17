@@ -38,7 +38,7 @@ version:
       aud: https://gitlab.com
   before_script:
     - cp $VM_PUB_KEY ./qimia-ai.pub
-    - tfenv use 1.5.7
+    - tfenv use 1.6.0
 
 variables:
   ARM_USE_OIDC: "true"

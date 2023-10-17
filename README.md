@@ -17,11 +17,11 @@ You need to do this locally from the CLI script [create_base_resources.sh](creat
 ## Locally with a User account
 The user or service principal to deploy this code needs `Contributor` and `Key Vault Administrator` access on the Resource Group. 
 Right now only `dev` environment is supported and consists of several steps:
-1. Install terraform v1.5.7 from the terraform
-   - Or install `tfenv`, and then run `tfenv use 1.5.7` which will automatically download the version 1.5.7 and will be active for the rest of the terminal session.
+1. Install terraform v1.6.0 from the terraform
+   - Or install `tfenv`, and then run `tfenv use 1.6.0` which will automatically download the version 1.6.0 and will be active for the rest of the terminal session.
 2. Generate or reuse an SSH key pair.
    Put the public and private key pair as  [qimia-ai](qimia-ai) and [qimia-ai.pub](qimia-ai.pub) in the project root.
-   3. Create a file called `terraform.tfvars` under [infrastructure](infrastructure). Append the following options to it as follows.
+   3. Create a file called `<ENV>.tfvars` under [infrastructure](infrastructure). Append the following options to it as follows.
       1. The resources need to be created under a Virtual Network. 
          1. If you want to use an existing VNet, you can If you want to create a new Virtual Network add the following lines to the file
             ```hcl
@@ -84,6 +84,7 @@ Right now only `dev` environment is supported and consists of several steps:
 
 ## Gitlab CI (Optional but recommended)
 The proper way to deploy the infrastructure is to use a CI pipeline such as Gitlab CI.
+
 ### Creation of an Azure Service Principal
 In order to allow the Gitlab CI pipeline to deploy resources a Service principal needs to be created.
 Simply run the following command to create a service principal
