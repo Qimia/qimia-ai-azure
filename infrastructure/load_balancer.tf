@@ -19,18 +19,18 @@ resource "azurerm_public_ip" "lb_ip" {
   domain_name_label   = "qimia-ai-${random_id.resource_suffix.hex}"
 }
 
-resource azurerm_key_vault_secret api_host {
+resource "azurerm_key_vault_secret" "api_host" {
   key_vault_id = azurerm_key_vault.app_secrets.id
-  name = "api-host"
+  name         = "api-host"
   content_type = "The DNS of the backend api optionally including the port."
-  value = "${azurerm_public_ip.lb_ip.fqdn}:${local.api_port}"
+  value        = "${azurerm_public_ip.lb_ip.fqdn}:${local.api_port}"
 }
 
-resource azurerm_key_vault_secret frontend_host {
+resource "azurerm_key_vault_secret" "frontend_host" {
   key_vault_id = azurerm_key_vault.app_secrets.id
-  name = "frontend-host"
+  name         = "frontend-host"
   content_type = "The DNS of the backend api optionally including the port."
-  value = "${azurerm_public_ip.lb_ip.fqdn}:80"
+  value        = "${azurerm_public_ip.lb_ip.fqdn}:80"
 }
 
 resource "azurerm_lb_rule" "frontend" {

@@ -1,6 +1,6 @@
 locals {
   admin_username = "ai_admin"
-  api_port = 8000
+  api_port       = 8000
 }
 resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   name                = "vmscaleset"
@@ -45,16 +45,16 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     primary = true
 
     ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = data.azurerm_subnet.public.id
+      name                                   = "internal"
+      primary                                = true
+      subnet_id                              = data.azurerm_subnet.public.id
       load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.vm_ips.id]
     }
     network_security_group_id = azurerm_network_security_group.vm.id
   }
 
   disable_password_authentication = false
-  encryption_at_host_enabled = true
+  encryption_at_host_enabled      = true
   tags = {
     env = var.env
   }
@@ -66,26 +66,26 @@ resource "random_password" "vm_admin_password" {
   special = false
 }
 
-resource azurerm_storage_blob bootstrap_script {
-  name = "bootstrap.sh"
-  storage_account_name = azurerm_storage_container.devops.storage_account_name
+resource "azurerm_storage_blob" "bootstrap_script" {
+  name                   = "bootstrap.sh"
+  storage_account_name   = azurerm_storage_container.devops.storage_account_name
   storage_container_name = azurerm_storage_container.devops.name
-  type = "Block"
-  source = "bootstrap.sh"
-  content_md5 = filemd5("bootstrap.sh")
+  type                   = "Block"
+  source                 = "bootstrap.sh"
+  content_md5            = filemd5("bootstrap.sh")
 }
 
-resource azurerm_storage_blob sync_logs_script {
-  name = "sync-logs.sh"
-  storage_account_name = azurerm_storage_container.devops.storage_account_name
+resource "azurerm_storage_blob" "sync_logs_script" {
+  name                   = "sync-logs.sh"
+  storage_account_name   = azurerm_storage_container.devops.storage_account_name
   storage_container_name = azurerm_storage_container.devops.name
-  type = "Block"
-  source = "sync-logs.sh"
-  content_md5 = filemd5("sync-logs.sh")
+  type                   = "Block"
+  source                 = "sync-logs.sh"
+  content_md5            = filemd5("sync-logs.sh")
 }
 
-data azurerm_storage_account devops {
-  name = var.storage_account_name
+data "azurerm_storage_account" "devops" {
+  name                = var.storage_account_name
   resource_group_name = data.azurerm_resource_group.this.name
 }
 
@@ -102,13 +102,13 @@ resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
       "echo ${azurerm_storage_blob.bootstrap_script.content_md5}",
       "echo ${azurerm_storage_blob.sync_logs_script.content_md5}",
       "sh bootstrap.sh",
-      "sh sync-logs.sh \"${azurerm_storage_container.logs.storage_account_name}\" \"${azurerm_storage_container.logs.name}\" & " ,
-    ]
+      "sh sync-logs.sh \"${azurerm_storage_container.logs.storage_account_name}\" \"${azurerm_storage_container.logs.name}\" & ",
+      ]
     )
   })
   protected_settings = jsonencode({
-      "storageAccountName"= azurerm_storage_blob.sync_logs_script.storage_account_name,
-      "storageAccountKey"= data.azurerm_storage_account.devops.primary_access_key,
+    "storageAccountName" = azurerm_storage_blob.sync_logs_script.storage_account_name,
+    "storageAccountKey"  = data.azurerm_storage_account.devops.primary_access_key,
     "fileUris" = [
       azurerm_storage_blob.bootstrap_script.url,
       azurerm_storage_blob.sync_logs_script.url,
@@ -224,5 +224,5 @@ resource "azurerm_storage_blob" "docker_compose_file" {
   storage_container_name = azurerm_storage_container.devops.name
   type                   = "Block"
   source_content         = local.docker_compose_yml
-  content_md5 = md5(local.docker_compose_yml)
+  content_md5            = md5(local.docker_compose_yml)
 }

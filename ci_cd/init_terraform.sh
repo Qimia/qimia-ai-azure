@@ -4,17 +4,12 @@ die () {
     echo >&2 "$@"
     exit 1
 }
-[ "$#" -eq 4 ] || die "This scripts needs to be run with two parameters env and the stack for example 'sh init_terraform.sh dev infrastructure'"
+[ "$#" -eq 2 ] || die "This scripts needs to be run with two parameters env and the stack for example 'sh init_terraform.sh dev infrastructure'"
 env="$1"
 stack="$2"
-resource_group_name="$3"
-storage_account_name="$4"
-cd "$stack"
-echo "Initializing Terraform"
 
-cp ".tfbackend" "${env}.tfbackend"
-echo "" >> "${env}.tfbackend"
-echo 'resource_group_name = "'"$resource_group_name"'"' >> "${env}.tfbackend"
-echo 'storage_account_name = "'"$storage_account_name"'"' >> "${env}.tfbackend"
-terraform init -backend-config="${env}.tfbackend" -reconfigure
+TF_BACKEND_CONFIG_PATH="${TF_BACKEND_CONFIG_PATH:-$env.tfbackend}"  # If TF_BACKEND_CONFIG_PATH not defined take the $end.tfvars instead.
+echo "TF backend config path $TF_BACKEND_CONFIG_PATH"
+cd "$stack"
+terraform init -backend-config="$TF_BACKEND_CONFIG_PATH" -reconfigure
 cd ..

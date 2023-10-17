@@ -56,7 +56,7 @@ variables:
   needs:
     - version
   script:
-    -  bash ci_cd/plan.sh $ENV infrastructure $RESOURCE_GROUP_NAME $DEVOPS_STORAGE_ACCOUNT_NAME
+    - bash ci_cd/plan.sh $ENV infrastructure
   artifacts:
     expire_in: 7 days
     paths:
@@ -81,7 +81,7 @@ plan-dev:
   variables:
     ENV: $CI_ENVIRONMENT_NAME
   script:
-    - bash ci_cd/deploy.sh $ENV infrastructure $RESOURCE_GROUP_NAME $DEVOPS_STORAGE_ACCOUNT_NAME
+    - bash ci_cd/deploy.sh $ENV infrastructure
 
 
 deploy-dev:
