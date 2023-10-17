@@ -13,3 +13,7 @@ resource "azurerm_role_assignment" "vm_keyvault_secrets_reader" {
   scope        = azurerm_key_vault.app_secrets.id
   role_definition_name = "Key Vault Secrets User"
 }
+
+output "key_vault_name" {
+  value = azurerm_key_vault.app_secrets.name
+}
