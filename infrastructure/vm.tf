@@ -84,10 +84,6 @@ resource "azurerm_storage_blob" "sync_logs_script" {
   content_md5            = filemd5("sync-logs.sh")
 }
 
-data "azurerm_storage_account" "devops" {
-  name                = var.storage_account_name
-  resource_group_name = data.azurerm_resource_group.this.name
-}
 
 resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
   name                         = "starter"
@@ -101,6 +97,7 @@ resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
       "set -e",
       "echo ${azurerm_storage_blob.bootstrap_script.content_md5}",
       "echo ${azurerm_storage_blob.sync_logs_script.content_md5}",
+      "echo ${azurerm_storage_blob.docker_compose_file.content_md5}",
       "sh bootstrap.sh",
       "sh sync-logs.sh \"${azurerm_storage_container.logs.storage_account_name}\" \"${azurerm_storage_container.logs.name}\" & ",
       ]
@@ -108,7 +105,7 @@ resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
   })
   protected_settings = jsonencode({
     "storageAccountName" = azurerm_storage_blob.sync_logs_script.storage_account_name,
-    "storageAccountKey"  = data.azurerm_storage_account.devops.primary_access_key,
+    "storageAccountKey"  = azurerm_storage_account.vm_storage.primary_access_key,
     "fileUris" = [
       azurerm_storage_blob.bootstrap_script.url,
       azurerm_storage_blob.sync_logs_script.url,
@@ -171,11 +168,29 @@ resource "azurerm_role_assignment" "vm" {
   scope                = data.azurerm_resource_group.this.id
   role_definition_name = "Reader"
 }
+resource "azurerm_role_assignment" "vm_read_write_data" {
+  principal_id         = azurerm_user_assigned_identity.vm.principal_id
+  scope                = azurerm_storage_account.vm_storage.id
+  role_definition_name = "Storage Blob data Contributor"
+}
+
+
+resource "azurerm_storage_account" "vm_storage" {
+  account_replication_type = "LRS"
+  account_tier             = "Standard"
+  location                 = data.azurerm_resource_group.this.location
+  name                     = "devops${random_id.resource_suffix.hex}"
+  resource_group_name      = data.azurerm_resource_group.this.name
+}
 
 
 resource "azurerm_storage_container" "devops" {
   name                 = "devops"
-  storage_account_name = var.storage_account_name
+  storage_account_name = azurerm_storage_account.vm_storage.name
+}
+
+resource "random_id" "frontend_public_secret" {
+  byte_length = 16
 }
 
 locals {
@@ -187,19 +202,29 @@ locals {
         ports = [
           "3000:3000"
         ]
+        environment = {
+          NEXT_PUBLIC_API_URL = local.backend_url
+          NEXT_PUBLIC_IS_MARKDOWN = "true"
+          NEXTAUTH_SECRET = random_id.frontend_public_secret.hex
+          NEXTAUTH_URL = local.frontend_url
+        }
       }
       model = {
-        image    = "${azurerm_container_registry.app.login_server}/model:latest"
+        image    = "qimia/llama-zmq-server:latest"
         hostname = "model"
         environment = {
 
           AZURE_STORAGE_ACCOUNT_NAME = "devopsqimiaaidev"
           AZURE_CONTAINER_NAME       = "llm-foundation-models"
-          AZURE_FILE_PATH            = "models7b2/ggml-vicuna-7b-q4_0-300523.bin"
+          AZURE_FILE_PATH            = "ggml-vicuna-7b-v1.5/ggml-model-q4_1.gguf"
+          MODEL_FILE                 = "ggml-vicuna-7b-v1.5__ggml-model-q4_1.gguf"
         }
+        volumes = [
+          "/home/ai_admin/models:/app/models"
+        ]
       }
       webapi = {
-        "image" = "${azurerm_container_registry.app.login_server}/webapi:latest"
+        "image" = "qimiaai27da.azurecr.io/webapi:latest"
         "ports" = [
           "${local.api_port}:8000"
         ]
@@ -214,13 +239,13 @@ locals {
 
 resource "azurerm_storage_container" "logs" {
   name                 = "logs"
-  storage_account_name = data.azurerm_storage_account.devops.name
+  storage_account_name = azurerm_storage_account.vm_storage.name
 }
 
 
 resource "azurerm_storage_blob" "docker_compose_file" {
   name                   = "docker-compose.yml"
-  storage_account_name   = var.storage_account_name
+  storage_account_name   = azurerm_storage_container.devops.storage_account_name
   storage_container_name = azurerm_storage_container.devops.name
   type                   = "Block"
   source_content         = local.docker_compose_yml
