@@ -8,12 +8,6 @@ variable "env" {
   description = "One of dev, preprod or prod."
 }
 
-variable "storage_account_name" {
-  type        = string
-  description = "Storage account name for devops purposes"
-}
-
-
 ###  VNET configuration
 variable "create_vnet" {
   type        = number
@@ -84,4 +78,16 @@ variable "machine_sku" {
   type        = string
   description = "The machine type to use"
   default     = "Standard_D4d_v5"
+}
+
+variable "custom_backend_dns" {
+  type = string
+  description = "The custom DNS for the backend api"
+  default = ""
+}
+
+variable "custom_frontend_dns" {
+  type = string
+  description = "The custom DNS for the frontend api"
+  default = ""
 }

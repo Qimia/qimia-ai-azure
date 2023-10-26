@@ -1,5 +1,5 @@
 set -e
-
+echo "Bootstrap path: $(pwd)"
 apt update && apt install -y docker.io docker-compose postgresql-client-common postgresql-client-12 wget curl
 wget -O azcopy.tar.gz https://aka.ms/downloadazcopy-v10-linux
 tar -xvf azcopy.tar.gz
