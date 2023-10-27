@@ -231,6 +231,7 @@ locals {
         environment = {
           ENV   = var.env
           CLOUD = "azure"
+          ENV_FILE_REMOTE_PATH = azurerm_storage_blob.app_config.url
         }
       }
     }
