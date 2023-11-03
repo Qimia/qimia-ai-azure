@@ -166,11 +166,7 @@ resource "azurerm_user_assigned_identity" "vm" {
   resource_group_name = data.azurerm_resource_group.this.name
 }
 
-resource "azurerm_role_assignment" "vm" {
-  principal_id         = azurerm_user_assigned_identity.vm.principal_id
-  scope                = data.azurerm_resource_group.this.id
-  role_definition_name = "Reader"
-}
+
 resource "azurerm_role_assignment" "vm_read_write_data" {
   principal_id         = azurerm_user_assigned_identity.vm.principal_id
   scope                = azurerm_storage_account.vm_storage.id
