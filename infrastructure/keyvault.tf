@@ -1,6 +1,6 @@
 resource "azurerm_key_vault" "app_secrets" {
   location                  = data.azurerm_resource_group.this.location
-  name                      = "app-secrets-${random_id.resource_suffix.hex}"
+  name                      = "app-secret-${random_id.resource_suffix.hex}"
   resource_group_name       = data.azurerm_resource_group.this.name
   sku_name                  = "standard"
   tenant_id                 = data.azurerm_client_config.current.tenant_id
