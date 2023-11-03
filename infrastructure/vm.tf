@@ -71,8 +71,8 @@ resource "azurerm_storage_blob" "bootstrap_script" {
   storage_account_name   = azurerm_storage_container.devops.storage_account_name
   storage_container_name = azurerm_storage_container.devops.name
   type                   = "Block"
-  source                 = "bootstrap.sh"
-  content_md5            = filemd5("bootstrap.sh")
+  source                 = "${path.module}/bootstrap.sh"
+  content_md5            = filemd5("${path.module}/bootstrap.sh")
 }
 
 resource "azurerm_storage_blob" "sync_logs_script" {
@@ -80,8 +80,8 @@ resource "azurerm_storage_blob" "sync_logs_script" {
   storage_account_name   = azurerm_storage_container.devops.storage_account_name
   storage_container_name = azurerm_storage_container.devops.name
   type                   = "Block"
-  source                 = "sync-logs.sh"
-  content_md5            = filemd5("sync-logs.sh")
+  source                 = "${path.module}/sync-logs.sh"
+  content_md5            = filemd5("${path.module}/sync-logs.sh")
 }
 
 
