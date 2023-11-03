@@ -20,9 +20,12 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   admin_username       = local.admin_username
   admin_password       = random_password.vm_admin_password.result
 
-  admin_ssh_key {
-    public_key = file("../qimia-ai.pub")
+  dynamic "admin_ssh_key" {
+    for_each = fileexists("${path.module}/../qimia-ai.pub") == true ? toset([1]) : toset([])
+    content {
+    public_key = file("${path.module}/../qimia-ai.pub")
     username   = local.admin_username
+    }
   }
   source_image_reference {
     publisher = "Canonical"
