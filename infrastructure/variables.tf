@@ -91,8 +91,15 @@ variable "custom_frontend_dns" {
   description = "The custom DNS for the frontend api"
   default = ""
 }
+
 variable "vm_encryption_at_host" {
   type = bool
   description = "Whether to enable encryption at host on the VMs."
+  default = true
+}
+
+variable "rbac_keyvault" {
+  type = bool
+  description = "Whether to use RBAC for keyvault secrets access"
   default = true
 }
