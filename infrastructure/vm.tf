@@ -57,7 +57,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   }
 
   disable_password_authentication = false
-  encryption_at_host_enabled      = true
+  encryption_at_host_enabled      = var.vm_encryption_at_host
   tags = {
     env = var.env
   }
