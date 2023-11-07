@@ -219,7 +219,7 @@ locals {
   webapi_image_full = "${local.webapi_image}:${var.webapi_image_version}"
 
   model_image = var.use_dockerhub ? "qimia/llama-zmq-server" : "${azurerm_container_registry.app.login_server}/llama-zmq-server"
-  model_image_with_cuda = local.model_image + var.cuda_version == null ? "" : "-cuda-${var.cuda_version}"
+  model_image_with_cuda = join("", [local.model_image, var.cuda_version == null ? "" : "-cuda-${var.cuda_version}"])
 
   model_image_full = "${local.model_image_with_cuda}:${var.model_image_version}"
 
