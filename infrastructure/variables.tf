@@ -103,3 +103,33 @@ variable "rbac_keyvault" {
   description = "Whether to use RBAC for keyvault secrets access"
   default = true
 }
+
+variable "use_dockerhub" {
+  type = bool
+  description = "Whether to use the dockerhub to pull the model, frontend and web api images."
+  default = false
+}
+
+variable "cuda_version" {
+  type = string
+  description = "Set only if you want to use a CUDA model. eg 12.2.2, 11.7.1"
+  default = null
+}
+
+variable "model_image_version" {
+  type = string
+  description = "The image revision for the model image. It'll be appended to the repository name"
+  default = "latest"
+}
+
+variable "webapi_image_version" {
+  type = string
+  description = "The image revision for the webapi image. It'll be appended to the repository name"
+  default = "latest"
+}
+
+variable "frontend_image_version" {
+  type = string
+  description = "The image revision for the frontend image. It'll be appended to the repository name"
+  default = "latest"
+}

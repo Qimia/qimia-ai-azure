@@ -193,11 +193,22 @@ resource "random_id" "frontend_public_secret" {
 }
 
 locals {
+
+  frontend_image = var.use_dockerhub ? "qimia/qimia-ai-frontend" : "${azurerm_container_registry.app.login_server}/frontend"
+  frontend_image_full = "${local.frontend_image}:${var.frontend_image_version}"
+
+  webapi_image = var.use_dockerhub ? "qimia/qimia-ai-webapi" : "${azurerm_container_registry.app.login_server}/webapi"
+  webapi_image_full = "${local.webapi_image}:${var.webapi_image_version}"
+
+  model_image = var.use_dockerhub ? "qimia/llama-zmq-server" : "${azurerm_container_registry.app.login_server}/llama-zmq-server"
+  model_image_with_cuda = concat(local.model_image, var.cuda_version == null ? "-cuda-${var.cuda_version}" : "")
+  model_image_full = "${local.model_image_with_cuda}:${var.model_image_version}"
+
   docker_compose_yml = yamlencode({
     version = "3.0"
     services = {
       frontend = {
-        image = "${azurerm_container_registry.app.login_server}/frontend:latest"
+        image = local.frontend_image_full
         ports = [
           "3000:3000"
         ]
@@ -209,7 +220,7 @@ locals {
         }
       }
       model = {
-        image    = "qimia/llama-zmq-server:latest"
+        image    = local.model_image_full
         hostname = "model"
         environment = {
 
@@ -223,7 +234,7 @@ locals {
         ]
       }
       webapi = {
-        "image" = "qimiaai27da.azurecr.io/webapi:latest"
+        "image" = local.webapi_image_full
         "ports" = [
           "${local.api_port}:8000"
         ]
@@ -250,4 +261,12 @@ resource "azurerm_storage_blob" "docker_compose_file" {
   type                   = "Block"
   source_content         = local.docker_compose_yml
   content_md5            = md5(local.docker_compose_yml)
+}
+
+output "vm_user_identity" {
+  value = azurerm_user_assigned_identity.vm.name
+}
+
+output "storage_account_name" {
+  value = azurerm_storage_account.vm_storage.name
 }
