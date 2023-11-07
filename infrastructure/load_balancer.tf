@@ -89,3 +89,11 @@ locals {
   backend_url = "${local.backend_http_protocol}://${local.backend_dns}"
   frontend_url = "${local.frontend_http_protocol}://${local.frontend_dns}"
 }
+
+output frontend_url {
+  value = local.frontend_url
+}
+
+output backend_url {
+  value = local.backend_url
+}
