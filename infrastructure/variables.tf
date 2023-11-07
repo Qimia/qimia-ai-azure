@@ -104,6 +104,18 @@ variable "rbac_keyvault" {
   default = true
 }
 
+variable "rbac_storage" {
+  type = bool
+  description = "Whether to use RBAC for accessing keys in the created storage account"
+  default = true
+}
+
+variable "ssh_cidr" {
+  type = string
+  description = "The CIDR to allow for SSH access to the VMs."
+  default = "*"
+}
+
 variable "use_dockerhub" {
   type = bool
   description = "Whether to use the dockerhub to pull the model, frontend and web api images."

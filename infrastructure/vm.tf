@@ -125,7 +125,7 @@ resource "azurerm_network_security_group" "vm" {
   resource_group_name = data.azurerm_resource_group.this.name
 }
 
-resource "azurerm_network_security_rule" "inbound_http_80" {
+resource "azurerm_network_security_rule" "allow_http" {
   access                      = "Allow"
   direction                   = "Inbound"
   name                        = "allow_http_and_optional_ssh"
@@ -133,12 +133,29 @@ resource "azurerm_network_security_rule" "inbound_http_80" {
   priority                    = 999
   protocol                    = "Tcp"
   source_port_range           = "*"
-  destination_port_ranges     = [3000, 8000, 22]
+  destination_port_ranges     = [3000, 8000]
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_network_security_group.vm.resource_group_name
   depends_on                  = [azurerm_network_security_group.vm]
 }
+
+resource "azurerm_network_security_rule" "allow_ssh" {
+  count = var.ssh_cidr == "" ? 0 : 1
+  access                      = "Allow"
+  direction                   = "Inbound"
+  name                        = "allow_ssh"
+  network_security_group_name = azurerm_network_security_group.vm.name
+  priority                    = 998
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_ranges     = [22]
+  source_address_prefix       = var.ssh_cidr
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_network_security_group.vm.resource_group_name
+  depends_on                  = [azurerm_network_security_group.vm]
+}
+
 resource "azurerm_network_security_rule" "allow_vm_egress" {
   access                      = "Allow"
   direction                   = "Outbound"
@@ -168,6 +185,7 @@ resource "azurerm_user_assigned_identity" "vm" {
 
 
 resource "azurerm_role_assignment" "vm_read_write_data" {
+  count = var.rbac_storage ? 1 : 0
   principal_id         = azurerm_user_assigned_identity.vm.principal_id
   scope                = azurerm_storage_account.vm_storage.id
   role_definition_name = "Storage Blob data Contributor"
