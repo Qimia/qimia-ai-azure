@@ -88,7 +88,7 @@ resource "azurerm_storage_blob" "sync_logs_script" {
 }
 
 
-resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
+resource "azurerm_linux_virtual_machine_scale_set_extension" "vm_starter" {
   name                         = "starter"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.vmss.id
   publisher                    = "Microsoft.Azure.Extensions"
@@ -212,7 +212,7 @@ resource "random_id" "frontend_public_secret" {
 
 locals {
 
-  frontend_image = var.use_dockerhub ? "qimia/qimia-ai-frontend" : "${azurerm_container_registry.app.login_server}/frontend"
+  frontend_image = var.use_dockerhub ? "qimia/llama-server-web-ui" : "${azurerm_container_registry.app.login_server}/frontend"
   frontend_image_full = "${local.frontend_image}:${var.frontend_image_version}"
 
   webapi_image = var.use_dockerhub ? "qimia/qimia-ai-webapi" : "${azurerm_container_registry.app.login_server}/webapi"
