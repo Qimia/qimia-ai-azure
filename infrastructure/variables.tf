@@ -145,3 +145,13 @@ variable "frontend_image_version" {
   description = "The image revision for the frontend image. It'll be appended to the repository name"
   default = "latest"
 }
+
+variable "hugging_face_model" {
+  type = string
+  default = ""
+}
+
+variable "hugging_face_model_file" {
+  type = string
+  default = ""
+}
