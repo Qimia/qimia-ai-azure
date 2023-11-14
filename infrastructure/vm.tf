@@ -215,7 +215,7 @@ locals {
   frontend_image = var.use_dockerhub ? "qimia/llama-server-web-ui" : "${azurerm_container_registry.app.login_server}/frontend"
   frontend_image_full = "${local.frontend_image}:${var.frontend_image_version}"
 
-  webapi_image = var.use_dockerhub ? "qimia/qimia-ai-webapi" : "${azurerm_container_registry.app.login_server}/webapi"
+  webapi_image = var.use_dockerhub ? "qimia/llama-server-web-api" : "${azurerm_container_registry.app.login_server}/webapi"
   webapi_image_full = "${local.webapi_image}:${var.webapi_image_version}"
 
   model_image = var.use_dockerhub ? "qimia/llama-zmq-server" : "${azurerm_container_registry.app.login_server}/llama-zmq-server"
