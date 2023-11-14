@@ -88,7 +88,7 @@ resource "azurerm_storage_blob" "sync_logs_script" {
 }
 
 
-resource "azurerm_linux_virtual_machine_scale_set_extension" "vm_starter" {
+resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
   name                         = "starter"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.vmss.id
   publisher                    = "Microsoft.Azure.Extensions"
