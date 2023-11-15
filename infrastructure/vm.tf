@@ -69,6 +69,12 @@ resource "random_password" "vm_admin_password" {
   special = false
 }
 
+resource azurerm_key_vault_secret "vm_admin_password" {
+  key_vault_id = azurerm_key_vault.app_secrets.id
+  name = "admin_password"
+  value = random_password.vm_admin_password.result
+}
+
 resource "azurerm_storage_blob" "bootstrap_script" {
   name                   = "bootstrap.sh"
   storage_account_name   = azurerm_storage_container.devops.storage_account_name
