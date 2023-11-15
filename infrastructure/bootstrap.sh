@@ -20,5 +20,7 @@ az acr login -n qimiaai27da  || true # It's okay to fail silently here. We'd fin
 docker-compose pull
 docker-compose up --detach
 sleep 90
-docker logs $(docker container ls -qa)
+echo "Sleep finished"
+docker container ls -a
+docker logs $(docker container ls -qa) || true
 docker image prune -f
