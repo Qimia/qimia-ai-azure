@@ -24,3 +24,4 @@ echo "Sleep finished"
 docker container ls -a
 docker logs $(docker container ls -qa) || true
 docker image prune -f
+exit 1;
