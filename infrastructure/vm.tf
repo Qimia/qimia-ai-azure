@@ -71,7 +71,7 @@ resource "random_password" "vm_admin_password" {
 
 resource azurerm_key_vault_secret "vm_admin_password" {
   key_vault_id = azurerm_key_vault.app_secrets.id
-  name = "admin_password"
+  name = "vm-admin-password"
   value = random_password.vm_admin_password.result
 }
 
