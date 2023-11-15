@@ -18,5 +18,6 @@ docker container stop $(docker container ls -aq) || true
 docker container rm $(docker container ls -aq) || true
 az acr login -n qimiaai27da  || true # It's okay to fail silently here. We'd find out in the next step anyway
 docker-compose pull
-docker-compose up
+docker-compose up --detach
+docker container ls -a
 docker image prune -f
