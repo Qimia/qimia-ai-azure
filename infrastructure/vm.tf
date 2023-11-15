@@ -248,8 +248,8 @@ locals {
         image    = local.model_image_full
         hostname = "model"
         environment = {
-          HUGGING_FACE_MODEL         = var.hugging_face_model
-          HUGGING_FACE_MODEL_FILE    = var.hugging_face_model_file
+          HUGGINGFACE_MODEL         = var.hugging_face_model
+          HUGGINGFACE_MODEL_FILE    = var.hugging_face_model_file
           MODEL_FILE                 = "ggml-vicuna-7b-v1.5__ggml-model-q4_1.gguf"
         }
         volumes = [
