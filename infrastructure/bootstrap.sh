@@ -22,6 +22,6 @@ docker-compose up --detach
 sleep 90
 echo "Sleep finished"
 docker container ls -a
-docker logs $(docker container ls -qa) || true
+docker logs $(docker container ls -qa -f name=.*model.*) || true
 docker image prune -f
 exit 1;
