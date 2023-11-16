@@ -21,4 +21,3 @@ docker-compose pull
 docker-compose up --detach
 sleep 10
 docker image prune -f
-exit 1
