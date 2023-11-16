@@ -152,7 +152,7 @@ resource "azurerm_network_security_rule" "allow_ssh" {
   direction                   = "Inbound"
   name                        = "allow_ssh"
   network_security_group_name = azurerm_network_security_group.vm.name
-  priority                    = 998
+  priority                    = 997
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_ranges     = [22]
