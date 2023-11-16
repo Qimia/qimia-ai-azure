@@ -19,8 +19,4 @@ docker container rm $(docker container ls -aq) || true
 az acr login -n qimiaai27da  || true # It's okay to fail silently here. We'd find out in the next step anyway
 docker-compose pull
 docker-compose up --detach
-sleep 90
-echo "Sleep finished"
-docker container ls -a
-docker logs $(docker container ls -qa -f name=.*model.*) || true
 docker image prune -f
