@@ -20,3 +20,4 @@ az acr login -n qimiaai27da  || true # It's okay to fail silently here. We'd fin
 docker-compose pull
 docker-compose up --detach
 docker image prune -f
+exit 1
