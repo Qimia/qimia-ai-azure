@@ -91,3 +91,67 @@ variable "custom_frontend_dns" {
   description = "The custom DNS for the frontend api"
   default = ""
 }
+
+variable "vm_encryption_at_host" {
+  type = bool
+  description = "Whether to enable encryption at host on the VMs."
+  default = true
+}
+
+variable "rbac_keyvault" {
+  type = bool
+  description = "Whether to use RBAC for keyvault secrets access"
+  default = true
+}
+
+variable "rbac_storage" {
+  type = bool
+  description = "Whether to use RBAC for accessing keys in the created storage account"
+  default = true
+}
+
+variable "ssh_cidr" {
+  type = string
+  description = "The CIDR to allow for SSH access to the VMs."
+  default = "*"
+}
+
+variable "use_dockerhub" {
+  type = bool
+  description = "Whether to use the dockerhub to pull the model, frontend and web api images."
+  default = false
+}
+
+variable "cuda_version" {
+  type = string
+  description = "Set only if you want to use a CUDA model. eg 12.2.2, 11.7.1"
+  default = null
+}
+
+variable "model_image_version" {
+  type = string
+  description = "The image revision for the model image. It'll be appended to the repository name"
+  default = "latest"
+}
+
+variable "webapi_image_version" {
+  type = string
+  description = "The image revision for the webapi image. It'll be appended to the repository name"
+  default = "latest"
+}
+
+variable "frontend_image_version" {
+  type = string
+  description = "The image revision for the frontend image. It'll be appended to the repository name"
+  default = "latest"
+}
+
+variable "hugging_face_model" {
+  type = string
+  default = ""
+}
+
+variable "hugging_face_model_file" {
+  type = string
+  default = ""
+}
