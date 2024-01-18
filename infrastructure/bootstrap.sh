@@ -16,7 +16,9 @@ echo "logged in."
 docker-compose down || true
 docker container stop $(docker container ls -aq) || true
 docker container rm $(docker container ls -aq) || true
-az acr login -n qimiaai27da
+az acr login -n qimiaai27da  || true # It's okay to fail silently here. We'd find out in the next step anyway
+docker image rm $(docker image ls -q) || true
 docker-compose pull
 docker-compose up --detach
+sleep 10
 docker image prune -f

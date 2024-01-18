@@ -57,7 +57,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   }
 
   disable_password_authentication = false
-  encryption_at_host_enabled      = true
+  encryption_at_host_enabled      = var.vm_encryption_at_host
   tags = {
     env = var.env
   }
@@ -67,6 +67,12 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
 resource "random_password" "vm_admin_password" {
   length  = 32
   special = false
+}
+
+resource azurerm_key_vault_secret "vm_admin_password" {
+  key_vault_id = azurerm_key_vault.app_secrets.id
+  name = "vm-admin-password"
+  value = random_password.vm_admin_password.result
 }
 
 resource "azurerm_storage_blob" "bootstrap_script" {
@@ -125,7 +131,7 @@ resource "azurerm_network_security_group" "vm" {
   resource_group_name = data.azurerm_resource_group.this.name
 }
 
-resource "azurerm_network_security_rule" "inbound_http_80" {
+resource "azurerm_network_security_rule" "allow_http" {
   access                      = "Allow"
   direction                   = "Inbound"
   name                        = "allow_http_and_optional_ssh"
@@ -133,12 +139,29 @@ resource "azurerm_network_security_rule" "inbound_http_80" {
   priority                    = 999
   protocol                    = "Tcp"
   source_port_range           = "*"
-  destination_port_ranges     = [3000, 8000, 22]
+  destination_port_ranges     = [3000, 8000]
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_network_security_group.vm.resource_group_name
   depends_on                  = [azurerm_network_security_group.vm]
 }
+
+resource "azurerm_network_security_rule" "allow_ssh" {
+  count = var.ssh_cidr == "" ? 0 : 1
+  access                      = "Allow"
+  direction                   = "Inbound"
+  name                        = "allow_ssh"
+  network_security_group_name = azurerm_network_security_group.vm.name
+  priority                    = 997
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_ranges     = [22]
+  source_address_prefix       = var.ssh_cidr
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_network_security_group.vm.resource_group_name
+  depends_on                  = [azurerm_network_security_group.vm]
+}
+
 resource "azurerm_network_security_rule" "allow_vm_egress" {
   access                      = "Allow"
   direction                   = "Outbound"
@@ -166,12 +189,9 @@ resource "azurerm_user_assigned_identity" "vm" {
   resource_group_name = data.azurerm_resource_group.this.name
 }
 
-resource "azurerm_role_assignment" "vm" {
-  principal_id         = azurerm_user_assigned_identity.vm.principal_id
-  scope                = data.azurerm_resource_group.this.id
-  role_definition_name = "Reader"
-}
+
 resource "azurerm_role_assignment" "vm_read_write_data" {
+  count = var.rbac_storage ? 1 : 0
   principal_id         = azurerm_user_assigned_identity.vm.principal_id
   scope                = azurerm_storage_account.vm_storage.id
   role_definition_name = "Storage Blob data Contributor"
@@ -197,11 +217,23 @@ resource "random_id" "frontend_public_secret" {
 }
 
 locals {
+
+  frontend_image = var.use_dockerhub ? "qimia/llama-server-web-ui" : "${azurerm_container_registry.app.login_server}/frontend"
+  frontend_image_full = "${local.frontend_image}:${var.frontend_image_version}"
+
+  webapi_image = var.use_dockerhub ? "qimia/llama-server-web-api" : "${azurerm_container_registry.app.login_server}/webapi"
+  webapi_image_full = "${local.webapi_image}:${var.webapi_image_version}"
+
+  model_image = var.use_dockerhub ? "qimia/llama-zmq-server" : "${azurerm_container_registry.app.login_server}/llama-zmq-server"
+  model_image_with_cuda = join("", [local.model_image, var.cuda_version == null ? "" : "-cuda-${var.cuda_version}"])
+
+  model_image_full = "${local.model_image_with_cuda}:${var.model_image_version}"
+
   docker_compose_yml = yamlencode({
     version = "3.0"
     services = {
       frontend = {
-        image = "${azurerm_container_registry.app.login_server}/frontend:latest"
+        image = local.frontend_image_full
         ports = [
           "3000:3000"
         ]
@@ -213,13 +245,11 @@ locals {
         }
       }
       model = {
-        image    = "qimia/llama-zmq-server:latest"
+        image    = local.model_image_full
         hostname = "model"
         environment = {
-
-          AZURE_STORAGE_ACCOUNT_NAME = "devopsqimiaaidev"
-          AZURE_CONTAINER_NAME       = "llm-foundation-models"
-          AZURE_FILE_PATH            = "ggml-vicuna-7b-v1.5/ggml-model-q4_1.gguf"
+          HUGGINGFACE_MODEL         = var.hugging_face_model
+          HUGGINGFACE_MODEL_FILE    = var.hugging_face_model_file
           MODEL_FILE                 = "ggml-vicuna-7b-v1.5__ggml-model-q4_1.gguf"
         }
         volumes = [
@@ -227,7 +257,7 @@ locals {
         ]
       }
       webapi = {
-        "image" = "qimiaai27da.azurecr.io/webapi:latest"
+        "image" = local.webapi_image_full
         "ports" = [
           "${local.api_port}:8000"
         ]
@@ -254,4 +284,12 @@ resource "azurerm_storage_blob" "docker_compose_file" {
   type                   = "Block"
   source_content         = local.docker_compose_yml
   content_md5            = md5(local.docker_compose_yml)
+}
+
+output "vm_user_identity" {
+  value = azurerm_user_assigned_identity.vm.name
+}
+
+output "storage_account_name" {
+  value = azurerm_storage_account.vm_storage.name
 }
