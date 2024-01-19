@@ -7,7 +7,7 @@ resource "azurerm_key_vault_secret" "email-password" {
     ignore_changes = [value]
   }
   tags = {
-    "file-encoding": "utf-8"
+    "file-encoding" : "utf-8"
   }
 }
 
@@ -20,7 +20,7 @@ resource "azurerm_key_vault_secret" "email-smtp" {
     ignore_changes = [value]
   }
   tags = {
-    "file-encoding": "utf-8"
+    "file-encoding" : "utf-8"
   }
 }
 
@@ -33,12 +33,12 @@ resource "azurerm_key_vault_secret" "email-address" {
     ignore_changes = [value]
   }
   tags = {
-    "file-encoding": "utf-8"
+    "file-encoding" : "utf-8"
   }
 }
 
-resource random_password admin_initial_web_app_password {
-  length = 32
+resource "random_password" "admin_initial_web_app_password" {
+  length  = 32
   special = false
 }
 
@@ -51,7 +51,7 @@ resource "azurerm_key_vault_secret" "admin-email-password" {
     ignore_changes = [value]
   }
   tags = {
-    "file-encoding": "utf-8"
+    "file-encoding" : "utf-8"
   }
 }
 resource "azurerm_key_vault_secret" "admin-email-address" {
@@ -63,6 +63,6 @@ resource "azurerm_key_vault_secret" "admin-email-address" {
     ignore_changes = [value]
   }
   tags = {
-    "file-encoding": "utf-8"
+    "file-encoding" : "utf-8"
   }
 }

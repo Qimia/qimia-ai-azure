@@ -80,20 +80,20 @@ resource "azurerm_network_interface" "frontend-nic" {
 }
 
 locals {
-  backend_http_protocol = var.custom_backend_dns == "" ? "http" : "https"
+  backend_http_protocol  = var.custom_backend_dns == "" ? "http" : "https"
   frontend_http_protocol = var.custom_frontend_dns == "" ? "http" : "https"
 
-  backend_dns = var.custom_backend_dns == "" ? "${azurerm_public_ip.lb_ip.fqdn}:8000" : var.custom_backend_dns
+  backend_dns  = var.custom_backend_dns == "" ? "${azurerm_public_ip.lb_ip.fqdn}:8000" : var.custom_backend_dns
   frontend_dns = var.custom_frontend_dns == "" ? "${azurerm_public_ip.lb_ip.fqdn}:80" : var.custom_frontend_dns
 
-  backend_url = "${local.backend_http_protocol}://${local.backend_dns}"
+  backend_url  = "${local.backend_http_protocol}://${local.backend_dns}"
   frontend_url = "${local.frontend_http_protocol}://${local.frontend_dns}"
 }
 
-output frontend_url {
+output "frontend_url" {
   value = local.frontend_url
 }
 
-output backend_url {
+output "backend_url" {
   value = local.backend_url
 }

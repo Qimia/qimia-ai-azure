@@ -23,8 +23,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   dynamic "admin_ssh_key" {
     for_each = fileexists("${path.module}/../qimia-ai.pub") == true ? toset([1]) : toset([])
     content {
-    public_key = file("${path.module}/../qimia-ai.pub")
-    username   = local.admin_username
+      public_key = file("${path.module}/../qimia-ai.pub")
+      username   = local.admin_username
     }
   }
   source_image_reference {
@@ -37,6 +37,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   os_disk {
     storage_account_type = "Standard_LRS"
     caching              = "ReadWrite"
+    disk_size_gb         = 50
   }
   identity {
     type         = "UserAssigned"
@@ -69,10 +70,10 @@ resource "random_password" "vm_admin_password" {
   special = false
 }
 
-resource azurerm_key_vault_secret "vm_admin_password" {
+resource "azurerm_key_vault_secret" "vm_admin_password" {
   key_vault_id = azurerm_key_vault.app_secrets.id
-  name = "vm-admin-password"
-  value = random_password.vm_admin_password.result
+  name         = "vm-admin-password"
+  value        = random_password.vm_admin_password.result
 }
 
 resource "azurerm_storage_blob" "bootstrap_script" {
@@ -122,6 +123,10 @@ resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
     ]
   })
   depends_on = [azurerm_storage_blob.bootstrap_script, azurerm_storage_blob.sync_logs_script]
+
+  provision_after_extensions = var.use_gpu ? [
+    azurerm_virtual_machine_scale_set_extension.cuda[0].name
+  ] : []
 }
 
 
@@ -147,7 +152,7 @@ resource "azurerm_network_security_rule" "allow_http" {
 }
 
 resource "azurerm_network_security_rule" "allow_ssh" {
-  count = var.ssh_cidr == "" ? 0 : 1
+  count                       = var.ssh_cidr == "" ? 0 : 1
   access                      = "Allow"
   direction                   = "Inbound"
   name                        = "allow_ssh"
@@ -191,7 +196,7 @@ resource "azurerm_user_assigned_identity" "vm" {
 
 
 resource "azurerm_role_assignment" "vm_read_write_data" {
-  count = var.rbac_storage ? 1 : 0
+  count                = var.rbac_storage ? 1 : 0
   principal_id         = azurerm_user_assigned_identity.vm.principal_id
   scope                = azurerm_storage_account.vm_storage.id
   role_definition_name = "Storage Blob data Contributor"
@@ -218,14 +223,14 @@ resource "random_id" "frontend_public_secret" {
 
 locals {
 
-  frontend_image = var.use_dockerhub ? "qimia/llama-server-web-ui" : "${azurerm_container_registry.app.login_server}/frontend"
+  frontend_image      = var.use_dockerhub ? "qimia/llama-server-web-ui" : "${azurerm_container_registry.app.login_server}/frontend"
   frontend_image_full = "${local.frontend_image}:${var.frontend_image_version}"
 
-  webapi_image = var.use_dockerhub ? "qimia/llama-server-web-api" : "${azurerm_container_registry.app.login_server}/webapi"
+  webapi_image      = var.use_dockerhub ? "qimia/llama-server-web-api" : "${azurerm_container_registry.app.login_server}/webapi"
   webapi_image_full = "${local.webapi_image}:${var.webapi_image_version}"
 
-  model_image = var.use_dockerhub ? "qimia/llama-zmq-server" : "${azurerm_container_registry.app.login_server}/llama-zmq-server"
-  model_image_with_cuda = join("", [local.model_image, var.cuda_version == null ? "" : "-cuda-${var.cuda_version}"])
+  model_image           = var.use_dockerhub ? "qimia/llama-zmq-server" : "${azurerm_container_registry.app.login_server}/llama-zmq-server"
+  model_image_with_cuda = join("", [local.model_image, !var.use_gpu ? "" : "-cuda-${var.cuda_version}"])
 
   model_image_full = "${local.model_image_with_cuda}:${var.model_image_version}"
 
@@ -238,19 +243,39 @@ locals {
           "3000:3000"
         ]
         environment = {
-          NEXT_PUBLIC_API_URL = local.backend_url
+          NEXT_PUBLIC_API_URL     = local.backend_url
           NEXT_PUBLIC_IS_MARKDOWN = "true"
-          NEXTAUTH_SECRET = random_id.frontend_public_secret.hex
-          NEXTAUTH_URL = local.frontend_url
+          NEXTAUTH_SECRET         = random_id.frontend_public_secret.hex
+          NEXTAUTH_URL            = local.frontend_url
         }
       }
       model = {
         image    = local.model_image_full
         hostname = "model"
-        environment = {
-          HUGGINGFACE_MODEL         = var.hugging_face_model
-          HUGGINGFACE_MODEL_FILE    = var.hugging_face_model_file
-          MODEL_FILE                 = "ggml-vicuna-7b-v1.5__ggml-model-q4_1.gguf"
+        environment = merge(
+          {
+            HUGGINGFACE_MODEL      = var.hugging_face_model
+            HUGGINGFACE_MODEL_FILE = var.hugging_face_model_file
+            MODEL_FILE             = "ggml-vicuna-7b-v1.5__ggml-model-q4_1.gguf"
+          },
+          var.use_gpu ? {
+            NUM_GPU_LAYERS = 20000
+          } : {}
+        )
+        deploy = {
+          resources = {
+            reservations = {
+              devices = [
+                {
+                  driver = "nvidia"
+                  count  = 1
+                  capabilities = [
+                    "gpu"
+                  ]
+                }
+              ]
+            }
+          }
         }
         volumes = [
           "/home/ai_admin/models:/app/models"
@@ -262,8 +287,8 @@ locals {
           "${local.api_port}:8000"
         ]
         environment = {
-          ENV   = var.env
-          CLOUD = "azure"
+          ENV                  = var.env
+          CLOUD                = "azure"
           ENV_FILE_REMOTE_PATH = azurerm_storage_blob.app_config.url
         }
       }
@@ -292,4 +317,22 @@ output "vm_user_identity" {
 
 output "storage_account_name" {
   value = azurerm_storage_account.vm_storage.name
+}
+
+resource "azurerm_virtual_machine_scale_set_extension" "cuda" {
+  count                        = var.use_gpu ? 1 : 0
+  name                         = "cuda"
+  virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.vmss.id
+  publisher                    = "Microsoft.HpcCompute"
+  type                         = "NvidiaGpuDriverLinux"
+  type_handler_version         = "1.6"
+
+  settings = jsonencode(
+    {
+      # From 12.2.2 to 12.2, simply removes the patch of the version
+      "driverVersion" : join(".", slice(split(".", var.cuda_version), 0, 2))
+      "installCUDA" : true
+      "updateOS" : true
+    }
+  )
 }

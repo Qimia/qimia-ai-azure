@@ -14,13 +14,13 @@ locals {
   }
   app_config_lines = concat(
     ["[app_config]"],
-    [for k in keys(local.app_config_map) : "app_config_${k}_secret = \"${lookup(local.app_config_map, k)}\"" ],
+    [for k in keys(local.app_config_map) : "app_config_${k}_secret = \"${lookup(local.app_config_map, k)}\""],
     [
       "app_config_deployment_mode = \"azure\"",
       "app_config_llama_host = \"tcp://model:5555\"",
       "app_config_azure_key_vault_name = \"${azurerm_key_vault.app_secrets.name}\""
     ]
-    )
+  )
   app_config_file = join("\n", local.app_config_lines)
 }
 
@@ -33,5 +33,5 @@ resource "azurerm_storage_blob" "app_config" {
   storage_account_name   = azurerm_storage_container.devops.storage_account_name
   storage_container_name = azurerm_storage_container.devops.name
   type                   = "Block"
-  source_content = local.app_config_file
+  source_content         = local.app_config_file
 }

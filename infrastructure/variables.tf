@@ -81,77 +81,82 @@ variable "machine_sku" {
 }
 
 variable "custom_backend_dns" {
-  type = string
+  type        = string
   description = "The custom DNS for the backend api"
-  default = ""
+  default     = ""
 }
 
 variable "custom_frontend_dns" {
-  type = string
+  type        = string
   description = "The custom DNS for the frontend api"
-  default = ""
+  default     = ""
 }
 
 variable "vm_encryption_at_host" {
-  type = bool
+  type        = bool
   description = "Whether to enable encryption at host on the VMs."
-  default = true
+  default     = true
 }
 
 variable "rbac_keyvault" {
-  type = bool
+  type        = bool
   description = "Whether to use RBAC for keyvault secrets access"
-  default = true
+  default     = true
 }
 
 variable "rbac_storage" {
-  type = bool
+  type        = bool
   description = "Whether to use RBAC for accessing keys in the created storage account"
-  default = true
+  default     = true
 }
 
 variable "ssh_cidr" {
-  type = string
+  type        = string
   description = "The CIDR to allow for SSH access to the VMs."
-  default = "*"
+  default     = "*"
 }
 
 variable "use_dockerhub" {
-  type = bool
+  type        = bool
   description = "Whether to use the dockerhub to pull the model, frontend and web api images."
-  default = false
+  default     = false
 }
 
 variable "cuda_version" {
-  type = string
+  type        = string
   description = "Set only if you want to use a CUDA model. eg 12.2.2, 11.7.1"
-  default = null
+  default     = null
 }
 
 variable "model_image_version" {
-  type = string
+  type        = string
   description = "The image revision for the model image. It'll be appended to the repository name"
-  default = "latest"
+  default     = "latest"
 }
 
 variable "webapi_image_version" {
-  type = string
+  type        = string
   description = "The image revision for the webapi image. It'll be appended to the repository name"
-  default = "latest"
+  default     = "latest"
 }
 
 variable "frontend_image_version" {
-  type = string
+  type        = string
   description = "The image revision for the frontend image. It'll be appended to the repository name"
-  default = "latest"
+  default     = "latest"
 }
 
 variable "hugging_face_model" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "hugging_face_model_file" {
-  type = string
+  type    = string
   default = ""
+}
+
+variable "use_gpu" {
+  type        = bool
+  description = "Whether to use a CUDA GPU for model deployment. The machine SKU mush support it."
 }
