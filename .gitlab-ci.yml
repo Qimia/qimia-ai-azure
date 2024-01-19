@@ -37,7 +37,6 @@ version:
     AZURE_ID_TOKEN:
       aud: https://gitlab.com
   before_script:
-    - cp $VM_PUB_KEY ./qimia-ai.pub
     - tfenv use 1.6.0
 
 variables:

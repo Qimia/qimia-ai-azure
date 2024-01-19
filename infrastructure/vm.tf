@@ -21,9 +21,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   admin_password       = random_password.vm_admin_password.result
 
   dynamic "admin_ssh_key" {
-    for_each = fileexists("${path.module}/../qimia-ai.pub") == true ? toset([1]) : toset([])
+    for_each = var.ssh_key == "" ? toset([]) : toset([1])
     content {
-      public_key = file("${path.module}/../qimia-ai.pub")
+      public_key = var.ssh_key
       username   = local.admin_username
     }
   }

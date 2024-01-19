@@ -160,3 +160,9 @@ variable "use_gpu" {
   type        = bool
   description = "Whether to use a CUDA GPU for model deployment. The machine SKU mush support it."
 }
+
+variable "ssh_key" {
+  type = string
+  description = "The SSH key to use"
+  default = ""
+}
