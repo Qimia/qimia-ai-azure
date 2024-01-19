@@ -124,9 +124,7 @@ resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
   })
   depends_on = [azurerm_storage_blob.bootstrap_script, azurerm_storage_blob.sync_logs_script]
 
-  provision_after_extensions = var.use_gpu ? [
-    azurerm_virtual_machine_scale_set_extension.cuda[0].name
-  ] : []
+  provision_after_extensions = var.use_gpu ? ["cuda"] : []
 }
 
 
@@ -320,7 +318,7 @@ output "storage_account_name" {
 }
 
 resource "azurerm_virtual_machine_scale_set_extension" "cuda" {
-  count                        = var.use_gpu ? 1 : 0
+  foreach                      = var.use_gpu ? toset(["cuda"]) : toset([])
   name                         = "cuda"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.vmss.id
   publisher                    = "Microsoft.HpcCompute"
