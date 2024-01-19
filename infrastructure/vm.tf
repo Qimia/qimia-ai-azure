@@ -122,7 +122,11 @@ resource "azurerm_virtual_machine_scale_set_extension" "vm_starter" {
       azurerm_storage_blob.docker_compose_file.url
     ]
   })
-  depends_on = [azurerm_storage_blob.bootstrap_script, azurerm_storage_blob.sync_logs_script]
+  depends_on = [
+    azurerm_storage_blob.bootstrap_script,
+    azurerm_storage_blob.sync_logs_script,
+    azurerm_virtual_machine_scale_set_extension.cuda
+  ]
 
   provision_after_extensions = var.use_gpu ? ["cuda"] : []
 }
