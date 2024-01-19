@@ -318,7 +318,7 @@ output "storage_account_name" {
 }
 
 resource "azurerm_virtual_machine_scale_set_extension" "cuda" {
-  foreach                      = var.use_gpu ? toset(["cuda"]) : toset([])
+  for_each                      = var.use_gpu ? toset(["cuda"]) : toset([])
   name                         = "cuda"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.vmss.id
   publisher                    = "Microsoft.HpcCompute"
