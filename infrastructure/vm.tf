@@ -62,6 +62,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   tags = {
     env = var.env
   }
+  lifecycle {
+    ignore_changes = [instances]
+  }
   depends_on = [data.azurerm_subnet.private, azurerm_network_security_group.vm, azurerm_user_assigned_identity.vm]
 }
 
